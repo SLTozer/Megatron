@@ -1,5 +1,6 @@
-function [ particles ] = resample( prevParticles, weights )
-%This function returns botSim[], and accepts botSim[], a vector of real weights.
+function [ particles ] = resample( prevParticles, weights, uncertainty )
+% This function returns botSim[], and accepts botSim[], a vector of real
+% weights, and an uncertainty value in [0, 1].
 
 count = length(weights);
 cumulativeWeights(count,1) = 0;
@@ -19,6 +20,9 @@ for j = 1:count
         i = i + 1;
     end
     particles(j) = prevParticles(i);
+    if(uncertainty > rand())
+        particles(j).randomPose(0);
+    end
     stochSamp = stochSamp + inverseCount;
 end
 
