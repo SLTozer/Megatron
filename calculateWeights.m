@@ -1,6 +1,7 @@
-function [ weights ] = calculateWeights( particles, distances, sensorError )
-%This function returns a vector of real weight, and accepts botSim[], a
-%vector of distances, and a real standard deviation for the sensor error.
+function [ weights, avgWeight ] = calculateWeights( particles, distances, sensorError )
+% This function returns a vector of normalized real weights and the average
+% un-normalized weight, and accepts botSim[], a vector of distances, and a
+% real standard deviation for the sensor error.
 
 minDistance = min(distances);
 count = length(particles);
@@ -16,6 +17,8 @@ for i = 1:count
     weights(i) = normalpdf(partMinDist, minDistance, sensorError);
     totalWeight = totalWeight + weights(i);
 end
+% Set average (un-normalized) weight
+avgWeight = totalWeight / count;
 % Normalize weights
 for i = 1:count
     weights(i) = weights(i) / totalWeight;
