@@ -25,6 +25,7 @@ weightFast = 0;
 slowDecay = 0.2;
 fastDecay = 0.6;
 sensorError = 1;
+bestIndex = 0;
 particleScans(num,1) = botSim.ultraScan();
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
@@ -36,7 +37,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
     
     %% Write code for scoring your particles    
-    [weights, avgWeight] = calculateWeights(particles, particleScans, sensorError);
+    [weights, avgWeight, bestIndex] = calculateWeights(particles, particleScans, sensorError);
     weightSlow = weightSlow + (slowDecay * (avgWeight - weightSlow));
     weightFast = weightFast + (fastDecay * (avgWeight - weightFast));
     uncertainty = max([0 (1 - (weightFast/weightSlow))]);
