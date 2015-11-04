@@ -1,21 +1,19 @@
-function [botSim] = localise(botSim,map,target)
-% This function returns botSim, and accepts, botSim, a map and a target.
-% LOCALISE Template localisation function
+function testRealbot(robot,map,sensorError)
+% This function accepts a Robot, and a map.
+
 
 %% setup code
 %you can modify the map to take account of your robots configuration space
 modifiedMap = map; %you need to do this modification yourself
-botSim.setMap(modifiedMap);
 
 
-
-botSim.setScanConfig(botSim.generateScanConfig(20));
 %generate some random particles inside the map
 num =300; % number of particles
 particles(num,1) = BotSim; %how to set up a vector of objects
 for i = 1:num
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
     particles(i).randomPose(0); %spawn the particles in random locations
+    % SET ACCORDING TO REAL ROBOT'S SCANNING
     particles(i).setScanConfig(particles(i).generateScanConfig(20));
 end
 
@@ -28,7 +26,6 @@ weightSlow = 0;
 weightFast = 0;
 slowDecay = 0.2;
 fastDecay = 0.6;
-sensorError = 1;
 bestIndex = 0;
 botScan = botSim.ultraScan(); %get a scan from the real robot.
 particleScans = zeros(num,20,1);
@@ -37,7 +34,7 @@ for i = 1:num
 end
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
-    botScan = botSim.ultraScan(); %get a scan from the real robot.
+    % GET ROBOT SCANS
     
     %% Write code for updating your particles scans
     for i = 1:num
@@ -59,8 +56,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     % here they just turn in cicles as an example
     turn = 0.5;
     move = 2;
-    botSim.turn(turn); %turn the real robot.  
-    botSim.move(move); %move the real robot. These movements are recorded for marking 
+    robot.turn(turn); %turn the real robot.  
+    robot.move(move); %move the real robot. These movements are recorded for marking 
     for i =1:num %for all the particles. 
         particles(i).turn(turn); %turn the particle in the same way as the real robot
         particles(i).move(move); %move the particle in the same way as the real robot
@@ -70,13 +67,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %only draw if you are in debug mode or it will be slow during marking
     if botSim.debug()
         hold off; %the drawMap() function will clear the drawing when hold is off
-        botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
-        botSim.drawBot(30,'g'); %draw robot with line length 30 and green
+        particles(1).drawMap(); %drawMap() turns hold back on again, so you can draw the bots
         for i =1:num
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
         drawnow;
     end
-    %pause(0.5);
 end
 end

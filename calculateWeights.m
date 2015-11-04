@@ -16,7 +16,7 @@ weights(count,1) = 0;
 for i = 1:count
     [partDists, ~] = particles(i).ultraScan();
     partMinDist = min(partDists);
-    weights(i) = normalpdf(partMinDist, minDistance, sensorError);
+    weights(i) = normpdf(partMinDist, minDistance, sensorError);
     if weights(i) > bestWeight
         bestWeight = weights(i);
         bestIndex = i;
