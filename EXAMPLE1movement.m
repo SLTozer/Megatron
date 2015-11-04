@@ -4,7 +4,6 @@ clear;      %clears workspace
 axis equal; %keeps the x and y scale the same
 map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  %default map
 
-
 disp('You can set up a new BotSim object with the code:');
 disp('botSim = BotSim(map)');
 disp(' ');

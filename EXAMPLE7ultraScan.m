@@ -1,3 +1,4 @@
+addpath(genpath('O:\Documents\Robotics\RWTHMindstormsNXTv4.07\RWTHMindstormsNXT'))
 %An example of the ultrasound scanning function
 clf;        %clears figures
 clc;        %clears console

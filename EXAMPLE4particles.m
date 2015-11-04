@@ -14,14 +14,13 @@ botSim.drawMap();
 particles(num,1) = BotSim; %how to set up a vector of objects
 for i =1:num
     particles(i) = BotSim(map);
-    particles(i).randomPose(0); 
+    particles(i).randomPose(10); 
     particles(i).drawBot(3);
 end
 
+input('Press enter to send the same movement commands to each particle');
 hold off;
 botSim.drawMap();
-
-input('Press enter to send the same movement commands to each particle');
 disp('-------------------------------------------------------------------');
 disp(' ');
 for i =1:num

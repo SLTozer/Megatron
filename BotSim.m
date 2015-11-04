@@ -1,5 +1,5 @@
 %{
-Robot simulator V0.33
+Robot simulator V0.35
 If you have any suggestions for fixes or improvements contact Austin Gregg-Smith ag7751@bristol.ac.uk
 %}
 
@@ -39,8 +39,7 @@ classdef BotSim < handle
                 if nargin <3
                     adminKey =0;
                     if nargin <2
-                        noiseLevel = [0 0 0];
-                        
+                        noiseLevel = [0 0 0];                        
                     end
                 end
                 bot.pos = [0 0];
@@ -93,7 +92,12 @@ classdef BotSim < handle
                 cps(:,:,i) = intersection(bot.scanLines(i,:),bot.mapLines)+randn(length(bot.mapLines),2)*bot.sensorNoise;
                 distSQ =sum((cps(:,:,i) - botpos).^2,2);
                 [distances(i,:), indices] = min(distSQ);
-                distances(i,:) = sqrt(distances(i,:)); % only do sqrt once instead of on the entire vector
+                tmp = sqrt(distances(i,:)); % only do sqrt once instead of on the entire vector
+                if isnan(tmp) %check for nan's as they will propigate through the filter and ruin things.
+                    distances(i,:) = inf;
+                else
+                    distances(i,:) = tmp;
+                end
                 crossingPoints(i,:) = cps(indices,:,i);
             end
             if bot.adminKey ~= 0
@@ -127,16 +131,16 @@ classdef BotSim < handle
             %program, Don't set them both to 0 however.
             transMat = createTransMat(bot.pos)*createRotMat(bot.ang)*createTransMat(bot.scanOffset);
             scanCenter = translate(bot.scanConfig*innerRad, transMat);
-            scans =  translate(bot.scanConfig*outerRad,transMat);           
+            scans =  translate(bot.scanConfig*outerRad,transMat);
             bot.scanLines = cat(2,scanCenter, scans);
-           
-%             %% used when I was testing inbuilt line crossing function
-%             scansLarge =  translate(bot.scanConfig*10000,transMat);
-%             bot.sl = nan(size(bot.scanConfig,1)*3-1,2);            
-%             i = 1:3:length(bot.sl);
-%             j = 2:3:length(bot.sl);
-%             bot.sl(i,:) = repmat(bot.pos,length(i),1) ;
-%             bot.sl(j,:) = scansLarge;            
+            
+            %             %% used when I was testing inbuilt line crossing function
+            %             scansLarge =  translate(bot.scanConfig*10000,transMat);
+            %             bot.sl = nan(size(bot.scanConfig,1)*3-1,2);
+            %             i = 1:3:length(bot.sl);
+            %             j = 2:3:length(bot.sl);
+            %             bot.sl(i,:) = repmat(bot.pos,length(i),1) ;
+            %             bot.sl(j,:) = scansLarge;
         end
         
         function inside = insideMap(bot)

@@ -20,8 +20,8 @@ iterators = ceil(iterators)+[1 1]; %to counteract 1 based indexing
 mapArray = zeros(iterators); %preallocate for speed
 hold on
 %loops through the grid indexes and tests if they are inside the map
-for i = 1:iterators(1)
-    for j = 1:iterators(2)
+for i = 1:iterators(2)
+    for j = 1:iterators(1)
         testPos = limsMin + [j-1 i-1]*res; %to counteract 1 based indexing
         %notice, that i and j have also been swapped here so that the only
         %thing left to do is invert the y axis. 
