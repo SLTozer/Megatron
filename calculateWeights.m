@@ -3,11 +3,11 @@ function [ weights, avgWeight, bestIndex ] = calculateWeights( particles, distan
 % and the index of the particle with highest weight. It accepts botSim[], a vector of distances,
 % and a real standard deviation for the sensor error.
 
-minDistance = min(distances);
 count = length(particles);
 totalWeight = 0;
 
 bestWeight = 0;
+bestIndex = 1;
 
 weights(count,1) = 0;
 % Calculate weights for each particle
@@ -15,8 +15,13 @@ weights(count,1) = 0;
 % Uses the normal pdf with mean = minDistance and stdev = sensorError
 for i = 1:count
     [partDists, ~] = particles(i).ultraScan();
-    partMinDist = min(partDists);
-    weights(i) = normpdf(partMinDist, minDistance, sensorError);
+    % Calculate weight here
+    weights(i) = 1;
+    for j = 1:length(distances)
+        tmp = normpdf(partDists(j), distances(j), sensorError*5);
+        weights(i) = weights(i) * tmp;
+    end
+    %
     if weights(i) > bestWeight
         bestWeight = weights(i);
         bestIndex = i;

@@ -7,16 +7,18 @@ function [botSim] = localise(botSim,map,target)
 modifiedMap = map; %you need to do this modification yourself
 botSim.setMap(modifiedMap);
 
+% Robot parameters
+numScans = 8;
+errorVal = [0, 0.2, 0.1];
+num =1000; % number of particles
 
-
-botSim.setScanConfig(botSim.generateScanConfig(20));
+botSim.setScanConfig(botSim.generateScanConfig(numScans));
 %generate some random particles inside the map
-num =300; % number of particles
 particles(num,1) = BotSim; %how to set up a vector of objects
 for i = 1:num
-    particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
+    particles(i) = BotSim(modifiedMap, errorVal);  %each particle should use the same map as the botSim object
     particles(i).randomPose(0); %spawn the particles in random locations
-    particles(i).setScanConfig(particles(i).generateScanConfig(20));
+    particles(i).setScanConfig(particles(i).generateScanConfig(numScans));
 end
 
 %% Localisation code
@@ -31,7 +33,7 @@ fastDecay = 0.6;
 sensorError = 1;
 bestIndex = 0;
 botScan = botSim.ultraScan(); %get a scan from the real robot.
-particleScans = zeros(num,20,1);
+particleScans = zeros(num,numScans,1);
 for i = 1:num
     particleScans(i,:) = botScan;
 end
@@ -41,6 +43,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code for updating your particles scans
     for i = 1:num
+        particles(i).setScanConfig(particles(i).generateScanConfig(numScans));
         particleScans(i,:) = particles(i).ultraScan();
     end
     
@@ -50,7 +53,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     weightFast = weightFast + (fastDecay * (avgWeight - weightFast));
     uncertainty = max([0 (1 - (weightFast/weightSlow))]);
     %% Write code for resampling your particles
-    particles = resample(particles, weights, uncertainty);
+    particles = resample(particles, weights, uncertainty, errorVal);
     
     %% Write code to check for convergence    
     
