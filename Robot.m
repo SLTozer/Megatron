@@ -24,6 +24,7 @@ classdef Robot < handle
     end
     methods
         % constructor - opens connection to port (closes all previous)
+        % requires paths to already be set
         function obj = Robot()
             %open connection
             COM_CloseNXT all;  
