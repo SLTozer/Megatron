@@ -7,6 +7,7 @@ function [botSim] = localise(botSim,map,target)
 modifiedMap = map; %you need to do this modification yourself
 botSim.setMap(modifiedMap);
 
+routePlan = Map(modifiedMap, target, 0);
 % Robot parameters
 numScans = 8;
 errorVal = [0, 0.2, 0.1];
@@ -22,7 +23,7 @@ for i = 1:num
 end
 
 %% Localisation code
-maxNumOfIterations = 30;
+maxNumOfIterations = 50;
 n = 0;
 converged =0; %The filter has not converged yet
 
@@ -37,6 +38,8 @@ particleScans = zeros(num,numScans,1);
 for i = 1:num
     particleScans(i,:) = botScan;
 end
+tx = 0;
+ty = 0;
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     botScan = botSim.ultraScan(); %get a scan from the real robot.
@@ -56,30 +59,61 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     particles = resample(particles, weights, uncertainty, errorVal);
     
     %% Write code to check for convergence    
-    
-    
+    estimatedPos = particles(bestIndex).getBotPos();
+    targetDistance = norm([target(1) - estimatedPos(1), target(2) - estimatedPos(2)]);
+    if (n == 1)
+        tx = estimatedPos(1);
+        ty = estimatedPos(2);
+    end
     %% Write code to decide how to move next
     % here they just turn in cicles as an example
-    turn = 0.5;
-    move = 2;
-    botSim.turn(turn); %turn the real robot.  
-    botSim.move(move); %move the real robot. These movements are recorded for marking 
-    for i =1:num %for all the particles. 
-        particles(i).turn(turn); %turn the particle in the same way as the real robot
-        particles(i).move(move); %move the particle in the same way as the real robot
+    %if (n < 5)
+    %    turn = 0.5;
+    %    move = 2;
+    %    botSim.turn(turn); %turn the real robot.  
+    %    botSim.move(move); %move the real robot. These movements are recorded for marking 
+    %    for i =1:num %for all the particles. 
+    %        particles(i).turn(turn); %turn the particle in the same way as the real robot
+    %        particles(i).move(move); %move the particle in the same way as the real robot
+    %    end
+    %else
+    [xdiff, ydiff, bearing, distance] = routePlan.findBearing(estimatedPos, tx, ty);
+    tx = xdiff + estimatedPos(1);
+    ty = ydiff + estimatedPos(2);
+    [tx, ty]
+    direction = particles(bestIndex).getBotAng();
+    deltaAng = bearing - direction;
+    move = distance;
+    if (distance > 3 || targetDistance > 3)
+        move = 3;
+    else
+        move = targetDistance;
     end
+    botSim.turn(deltaAng);
+    botSim.move(move);
+    for i = 1:num
+        particles(i).turn(deltaAng);
+        particles(i).move(move);
+    end
+    estimatedPos = particles(bestIndex).getBotPos();
+    targetDistance = norm([target(1) - estimatedPos(1), target(2) - estimatedPos(2)]);
+    if (targetDistance < 3)
+        converged = 1;
+    end
+    %end
     
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
-    if botSim.debug()
-        hold off; %the drawMap() function will clear the drawing when hold is off
-        botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
-        botSim.drawBot(30,'g'); %draw robot with line length 30 and green
-        for i =1:num
-            particles(i).drawBot(3); %draw particle with line length 3 and default color
-        end
-        drawnow;
-    end
+    %if botSim.debug()
+    %    hold off; %the drawMap() function will clear the drawing when hold is off
+    botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
+    botSim.drawBot(30,'g'); %draw robot with line length 30 and green
+    particles(bestIndex).drawBot(3, 'b');
+    %    for i =1:num
+    %        particles(i).drawBot(3); %draw particle with line length 3 and default color
+    %    end
+    drawnow;
+    %end
     %pause(0.5);
 end
 end

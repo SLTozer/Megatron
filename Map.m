@@ -62,11 +62,19 @@ classdef Map < handle
         
         % Find bearing towards target (staying inside map). Empty array if
         % at target or no route found.
-        function [bearing, distance] = findBearing( map, position )
+        function [x, y, bearing, distance] = findBearing( map, position, prevX, prevY )
             if ~inpolygon(position(1), position(2), map.polygonX, map.polygonY)
-                error('Position is outside or too close to walls!');
+                if ~isequal(position, map.vertices(1,:))
+                    x = prevX - position(1);
+                    y = prevY - position(2);
+                    bearing = atan2( y, x);
+                    distance = norm([x, y]);
+                else
+                    bearing = [];
+                    distance = 0;
+                end
             else
-                pdist = map.findValidDistances(position, map.vertices)
+                pdist = map.findValidDistances(position, map.vertices);
                 [~, i] = min( map.dijdist + pdist );
                 if ~isequal(position, map.vertices(1,:))
                     x = map.vertices(i,1) - position(1);
