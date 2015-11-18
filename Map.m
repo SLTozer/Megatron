@@ -60,6 +60,25 @@ classdef Map < handle
             end
         end
         
+        % Creates array of all valid paths between nodes
+        % paths are valid if centre is within shape and it doesn't
+        % intersect any walls.
+        % Walls themselves are valid paths.
+        function paths = findValidPaths(map, vertices)
+            N = size(vertices,1);
+            paths = [];
+            for a = 1:N
+                for b = a+1:N
+                    p = [vertices(b,:), vertices(a,:)];
+                    mid = (vertices(b,:) + vertices(a,:)) / 2;
+                    % Inpolygon supports concave polygons
+                    if inpolygon(mid(1),mid(2),map.polygonX,map.polygonY) && ~Map.intersectsAny(map.walls, p) 
+                        paths(end+1,:) = p;
+                    end
+                end
+            end
+        end
+        
         % Find bearing towards target (staying inside map). Empty array if
         % at target or no route found.
         function [x, y, bearing, distance] = findBearing( map, position, prevX, prevY )
@@ -104,6 +123,11 @@ classdef Map < handle
             scatter(map.vertices(1,1), map.vertices(1,2), 'x')
             scatter(position(1), position(2), 'o', 'r')
             plot(map.polygonX, map.polygonY)
+            % plot valid routes
+            paths = map.findValidPaths([map.vertices; position]);
+            for i = 1:size(paths,1)
+                plot( paths(i,[1 3]), paths(i,[2 4]), 'b' );
+            end
         end
     end
     methods(Static)        
