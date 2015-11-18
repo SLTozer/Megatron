@@ -13,13 +13,15 @@ notch = [0,0; 0,1; 0.5,0.4; 1,1; 1,0];
 cshape = [0,0; 0,1; 0.5,1; 0.5,0.5; 1,0.5; 1,1; 1.5,1; 1.5,0];
 map = Map(cshape, [0.15, 0.75], 0.1);
 position = [1.25, 0.75];
+x = 0
+y = 0
 
 figure();
 map.plot(position);
 
 while 1
     pause();
-    [bearing, distance] = map.findBearing(position);
+    [x, y, bearing, distance] = map.findBearing(position, x, y);
     position = position + [cos(bearing), sin(bearing)] * 0.05;
     map.plot(position);
 end
