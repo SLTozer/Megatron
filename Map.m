@@ -152,12 +152,15 @@ classdef Map < handle
                 u = enum / denom;
                 % fudge for detecting doubles equal to zero or one
                 tol = 0.0001;
-                if xor( abs(t)<tol || abs(t-1)<tol, abs(u)<tol || abs(u-1) < tol)
-                    % intersection if line crosses an endpoint of the other BUT
-                    % doesnt start or stop on that point (crossing a corner)
-                    bool = true;
+                tolU = abs(u)<tol || abs(u-1) < tol;
+                tolT = abs(t)<tol || abs(t-1)<tol;
+                if tolT && ~tolU
+                    bool = 0 <= u && u <= 1;
+                elseif ~tolT && tolU
+                    bool = 0 <= t && t <= 1;
+                elseif tolT && tolU
+                    bool = false;
                 else
-                    % intersection anywhere along rest of line
                     bool = (0 < t && t < 1 && 0 < u && u < 1);
                 end
             end
