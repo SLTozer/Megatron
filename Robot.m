@@ -16,21 +16,32 @@ classdef Robot < handle
         scan_constant = 1; % cm shift
         move_constant = 40; % degrees of motor / cm travelled
         turn_constant = 319 % degrees of motor / radians  travelled 
+        turn_ultra_constant = 60; % degrees of scan motor / radians scanned
         axle_rad = 7; % cm
+        scan_num = 10;
         
         % right and left motors to enable blocking
-        right = NXTMotor();
-        left = NXTMotor();
+        right
+        left
+        
+        scan_clockwise = true;
     end
     methods
         % constructor - opens connection to port (closes all previous)
-        % requires paths to already be set
         function obj = Robot()
+            % location specific paths
+            addpath(genpath('\RWTHMindstormsNXT'))
+            addpath(genpath('\BotSimLib0.33'))
+            %addpath(genpath('\libusb-win32-bin-1.2.6.0\lib'))
+            %loadlibrary('libusb.lib')
             %open connection
             COM_CloseNXT all;  
             h = COM_OpenNXT();
             COM_SetDefaultNXT(h);
-            OpenUltrasonic(SENSOR_4); %open usensor on port 4
+            OpenUltrasonic(SENSOR_1); %open usensor on port 4
+            % set motors to empty call to allow correct blocking operaion
+            obj.right = NXTMotor();
+            obj.left = NXTMotor();
         end
         
         % automatically calibrate ultrasound. Dist is a vector of test
@@ -50,7 +61,7 @@ classdef Robot < handle
                 d = dist(r);
                 input(['Put me at ', num2str(d), ' cm from target, then press enter:']); 
                 for i = 1:N
-                    result(1,i) = GetUltrasonic(SENSOR_4);
+                    result(1,i) = GetUltrasonic(SENSOR_1);
                     % print progress bar
                     clc
                     fprintf('Scanning @ %d cm: %d %%\n', d, (i * 100) / N);
@@ -74,6 +85,25 @@ classdef Robot < handle
             disp(['Raw Er', TAB, num2str(val_raw_error)]);
             disp(['Rel Er', TAB, num2str(val_rel_error)]);
             disp(['Calculated constant: ', num2str(obj.scan_constant), 'cm']);
+        end
+        
+        function calibrateUltraTurn(obj, radians, N)
+            % initialise
+            actual = zeros(1,N);
+            
+            % take readings
+            for i = 1:N
+                input('Be prepared to measure how many radians I have turned. Press enter to begin:')
+                % convert inputs
+                deg = abs(round(radians * obj.turn_ultra_constant));
+                obj.turnUltra(deg)
+                actual(i) = input('Enter how many radians I have turned:');
+            end
+            
+            % calculate new const and display
+            obj.turn_ultra_constant = obj.turn_ultra_constant * radians / mean(actual);
+            fprintf('Mean result %f radians.\n', mean(actual));
+            fprintf('New ultrascan turn constant set as %f degrees(motor) / radians(robot).\n', obj.turn_ultra_constant);   
         end
         
         function calibrateTurn(obj, radians, N)
@@ -170,8 +200,34 @@ classdef Robot < handle
             obj.startMotors(lpower, ldeg, rpower, rdeg)
         end
         
-        function dist = scan(obj)
-            dist = obj.scan_constant + GetUltrasonic(SENSOR_4);
+        function setScanNumber(obj, num)
+            obj.scan_num = num;
+        end
+                
+        function dist = ultraScan(obj)
+            % convert inputs
+            deg = abs(round(2 * pi * obj.turn_ultra_constant / obj.scan_num));
+            dist = zeros(1, obj.scan_num);
+            for i = 1:obj.scan_num
+                dist(i) = obj.scan_constant + GetUltrasonic(SENSOR_1);
+                turnUltra(obj, deg, obj.scan_clockwise)
+            end
+            obj.scan_clockwise = ~obj.scan_clockwise;
+            if ~obj.scan_clockwise
+                dist = fliplr(dist);
+            end
+        end
+        
+        function turnUltra(~, deg, clockwise)
+            % smoothstart and brake give better precision
+            if clockwise
+                power = 100;
+            else
+                power = -100;
+            end
+            motor = NXTMotor(MOTOR_C, 'Power', power, 'TachoLimit', deg, 'SmoothStart', true, 'ActionAtTachoLimit', 'brake');
+            motor.SendToNXT();
+            motor.WaitFor();
         end
         
         % wait for end of last commands (if any)
