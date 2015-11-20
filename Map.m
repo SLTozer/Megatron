@@ -110,6 +110,11 @@ classdef Map < handle
         function plot( map, position )
             clf
             hold on
+            % plot valid routes
+            paths = map.findValidPaths([map.vertices; position]);
+            for i = 1:size(paths,1)
+                plot( paths(i,[1 3]), paths(i,[2 4]), 'b' );
+            end
             % plot planned route
             pdist = map.findValidDistances(position, map.vertices);
             [~, i] = min( map.dijdist + pdist );
@@ -119,15 +124,9 @@ classdef Map < handle
                 last = map.vertices(i,:);
                 i = map.dijnext(i);
             end
-            % walls, target and position
-            scatter(map.vertices(1,1), map.vertices(1,2), 'x')
+            % target and position
+            scatter(map.vertices(1,1), map.vertices(1,2), 'x', 'r')
             scatter(position(1), position(2), 'o', 'r')
-            plot(map.polygonX, map.polygonY)
-            % plot valid routes
-            paths = map.findValidPaths([map.vertices; position]);
-            for i = 1:size(paths,1)
-                plot( paths(i,[1 3]), paths(i,[2 4]), 'b' );
-            end
         end
     end
     methods(Static)        

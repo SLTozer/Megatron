@@ -30,8 +30,8 @@ classdef Robot < handle
         % constructor - opens connection to port (closes all previous)
         function obj = Robot()
             % location specific paths
-            addpath(genpath('\RWTHMindstormsNXT'))
-            addpath(genpath('\BotSimLib0.33'))
+            %addpath(genpath('\RWTHMindstormsNXT'))
+            %addpath(genpath('\BotSimLib0.33'))
             %addpath(genpath('\libusb-win32-bin-1.2.6.0\lib'))
             %loadlibrary('libusb.lib')
             %open connection
@@ -217,6 +217,13 @@ classdef Robot < handle
                 dist = fliplr(dist);
             end
             obj.scan_clockwise = ~obj.scan_clockwise;
+        end
+        
+        function dist = fastUltraScan(obj)
+            %turnUltra(obj, 2 * pi, obj.scan_clockwise)
+            tic
+            turnUltra(obj, 360, ~obj.scan_clockwise)
+            toc
         end
         
         function turnUltra(~, deg, clockwise)
