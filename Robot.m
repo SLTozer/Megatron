@@ -208,14 +208,15 @@ classdef Robot < handle
             % convert inputs
             deg = abs(round(2 * pi * obj.turn_ultra_constant / obj.scan_num));
             dist = zeros(1, obj.scan_num);
-            for i = 1:obj.scan_num
-                dist(i) = obj.scan_constant + GetUltrasonic(SENSOR_1);
+            dist(1) = obj.scan_constant + GetUltrasonic(SENSOR_1);
+            for i = 2:obj.scan_num
                 turnUltra(obj, deg, obj.scan_clockwise)
+                dist(i) = obj.scan_constant + GetUltrasonic(SENSOR_1);
             end
-            obj.scan_clockwise = ~obj.scan_clockwise;
             if ~obj.scan_clockwise
                 dist = fliplr(dist);
             end
+            obj.scan_clockwise = ~obj.scan_clockwise;
         end
         
         function turnUltra(~, deg, clockwise)
