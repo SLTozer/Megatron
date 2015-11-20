@@ -9,6 +9,8 @@ function [ weights, avgWeight, bestIndex ] = calculateWeightsLF( particles, dist
     bestWeight = 0;
     bestIndex = 1;
 
+    outOfMapFactor = 1;
+    
     anglePerScan = 2*pi/length(distances);
 
     weights(count,1) = 0;
@@ -16,6 +18,9 @@ function [ weights, avgWeight, bestIndex ] = calculateWeightsLF( particles, dist
     for i = 1:count
         % Calculate weight here
         weights(i) = 1;
+        if ~particles(i).insideMap()
+            weights(i) = outOfMapFactor;
+        end
         for j = 1:length(distances)
             if isnan(distances(j))
                 weight = lf.minLikelihood;
@@ -25,7 +30,6 @@ function [ weights, avgWeight, bestIndex ] = calculateWeightsLF( particles, dist
                 projectedPoint = particles(i).getBotPos() + scanVector;
                 weight = lf.getPointLikelihood(projectedPoint);
             end
-            weight = weight^scanWeight;
             weights(i) = weights(i) * weight;
         end
         if weights(i) > bestWeight

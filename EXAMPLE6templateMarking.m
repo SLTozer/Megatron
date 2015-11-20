@@ -51,9 +51,9 @@ resultsDis = resultsTime;
 resultsLength = resultsTime;
 resultsCollision = resultsTime;
 disp('checking BotSim.m checksum...')
-if(strcmp(md5(strcat(pwd,'\BotSim.m')), 'B73FCC92F024EA84FD9E383A32DC35EE') ==0)
-    disp('BotSim.m checksum failed to match.  Please replace with an umodified copy')
-else
+%if(strcmp(md5(strcat(pwd,'\BotSim.m')), 'B73FCC92F024EA84FD9E383A32DC35EE') ==0)
+%    disp('BotSim.m checksum failed to match.  Please replace with an umodified copy')
+%else
     disp('marking...')
     
     %% marking
@@ -121,4 +121,4 @@ else
     compiledResults = [averageCompletionTime averageDisFromTgt averagePathLength percentCollision];
     
     ResultsTable = table(averageCompletionTime, averageDisFromTgt, averagePathLength, percentCollision,'RowNames',{'Map1';'Map2';'Map3'})
-end
+%end
