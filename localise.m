@@ -60,8 +60,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code for scoring your particles    
     [weights, avgWeight, bestIndex] = calculateWeightsLF(particles, botScan, likelihoodField);
     bestParticle = particles(bestIndex);
-    weightSlow = weightSlow + (slowDecay * (avgWeight - weightSlow))
-    weightFast = weightFast + (fastDecay * (avgWeight - weightFast))
+    weightSlow = weightSlow + (slowDecay * (avgWeight - weightSlow));
+    weightFast = weightFast + (fastDecay * (avgWeight - weightFast));
     uncertainty = max([0 (1 - (weightFast/weightSlow))]);
     %% Write code for resampling your particles
     particles = resample(particles, weights, uncertainty, errorVal);
@@ -92,10 +92,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     direction = bestParticle.getBotAng();
     deltaAng = bearing - direction;
     move = distance;
-    if (distance > 3 || targetDistance > 3)
-        move = 3;
-    else
-        move = targetDistance;
+    if (distance > 10)
+        move = 10;
     end
     botSim.turn(deltaAng);
     botSim.move(move);
