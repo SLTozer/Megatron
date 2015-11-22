@@ -8,10 +8,10 @@ while i <= clusterCount-1
     j = i + 1;
     while j <= clusterCount
         % Check distance using the smaller standard deviation
-        minDev = min([norm(cDev(i,:)), norm(cDev(j,:))]);
+        maxDev = max([norm(cDev(i,:)), norm(cDev(j,:))]);
         meanDist = norm(cMeans(i,:)-cMeans(j,:));
         % Merge clusters if they are within 3 standard deviations
-        if meanDist < (minDev * 3)
+        if meanDist < (maxDev * 3)
             for p = 1:length(cIDs)
                 if cIDs(p) == j
                     cIDs(p) = i;
