@@ -29,20 +29,20 @@ classdef LikelihoodField < handle
             % Calculates the axis-aligned bounding box of the map
             lf.minPoint = [Inf,Inf];
             lf.maxPoint = [-Inf,-Inf];
-            N = size(map_in.vertices,1);
+            N = size(map_in,1);
             for a = 1:N
                 for d = 1:2
-                    if map_in.vertices(a,d) < lf.minPoint(d)
-                        lf.minPoint(d) = map_in.vertices(a,d);
-                    elseif map_in.vertices(a,d) > lf.maxPoint(d)
-                        lf.maxPoint(d) = map_in.vertices(a,d);
+                    if map_in(a,d) < lf.minPoint(d)
+                        lf.minPoint(d) = map_in(a,d);
+                    elseif map_in(a,d) > lf.maxPoint(d)
+                        lf.maxPoint(d) = map_in(a,d);
                     end
                 end
             end
             lf.minPoint = lf.minPoint - falloffDist;
             lf.maxPoint = lf.maxPoint + falloffDist;
             % Calculates the dimensions of the field
-            lf.fieldSize = ceil((lf.maxPoint - lf.minPoint) / width);
+            lf.fieldSize = ceil((lf.maxPoint - lf.minPoint) / width) + 1;
             lf.field = ones(lf.fieldSize) * minLikelihood;
             % Calculates likelihood values for the field
             for a = 1:N
@@ -52,7 +52,7 @@ classdef LikelihoodField < handle
                 else
                     b = a + 1;
                 end
-                wall = [map_in(a,:),map_in(b,:)];
+                wall = [map_in(a,:);map_in(b,:)];
                 wallMinCoord = wall(1,:);
                 wallMaxCoord = wall(1,:);
                 for d = 1:2
@@ -69,7 +69,7 @@ classdef LikelihoodField < handle
                 % Assign likelihood values
                 for x = wallMinPoint(1):wallMaxPoint(1)
                     for y = wallMinPoint(2):wallMaxPoint(2)
-                        dist = LikelihoodField.distPointToSegment(lf.getPointCoords(x,y), wall(1,;), wall(2,:));
+                        dist = LikelihoodField.distPointToSegment(lf.getPointCoords([x,y]), wall(1,:), wall(2,:));
                         pointLikelihood = falloff^dist;
                         if lf.field(x,y) < pointLikelihood
                             lf.field(x,y) = pointLikelihood;
@@ -81,13 +81,15 @@ classdef LikelihoodField < handle
         
         % Returns the [x y] of the nearest field cell to the given coords
         function point = findNearestPoint(lf, coords)
-            relativeCoords = coords - lf.minPoint;
+            clampedCoords = coords;
             for d = 1:2
-                if relativeCoords(d) < lf.minPoint(d)
-                    relativeCoords(d) = lf.minPoint(d)
-                elseif relativeCoords(d) > lf.maxPoint(d)
-                    relativeCoords(d) = lf.maxPoint(d)
+                if clampedCoords(d) < lf.minPoint(d)
+                    clampedCoords(d) = lf.minPoint(d);
+                elseif clampedCoords(d) > lf.maxPoint(d)
+                    clampedCoords(d) = lf.maxPoint(d);
                 end
+            end
+            relativeCoords = clampedCoords - lf.minPoint;
             point = round(relativeCoords/lf.cellWidth) + 1;
         end
 
