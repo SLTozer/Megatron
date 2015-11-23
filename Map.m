@@ -221,17 +221,72 @@ classdef Map < handle
         % The map is shrunk such that the new walls are [quant] inwards
         % from the old walls, in the direction normal to the old wall.
         function newvert = shrinkMap( vert, quant )
+            polygonX = cat(1,vert(:,1), vert(1,1));
+            polygonY = cat(1,vert(:,2), vert(1,2));
             newvert = zeros(size(vert));
-            last_vec = vert(1,:) - vert(end,:);
-            last_point = vert(end,:) + Map.normal(last_vec) * quant;
-            vert(end+1,:) = vert(1,:); % add final value to end for fudged looping
-            for v = 1:length(vert)-1
-                vec = vert(v+1,:) - vert(v,:);
-                point = vert(v,:) + Map.normal(vec) * quant;
-                newvert(v,:) = Map.intersection(last_point, last_vec, point, vec);
-                last_vec = vec;
-                last_point = point;
+            n = length(vert);
+            for i = 2:length(vert)-1
+                a = vert(i,:);
+                b = vert(i-1,:);
+                c = vert(i+1,:);
+                ab = [b(1) - a(1), b(2) - a(2)];
+                ac = [c(1) - a(1), c(2) - a(2)];
+                uab = ab/norm(ab);
+                uac = ac/norm(ac);
+                abc = uab+uac;
+                uabc = abc/norm(abc);
+                newv = vert(i,:) + uabc;
+                if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                    uabc = -uabc;
+                    newv = vert(i,:) + uabc;
+                    if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                        error('Bad bubbling1');
+                    end
+                end
+                newvert(i,:) = vert(i,:) + quant*uabc;
             end
+            % v(1)
+            ab = [vert(2,1) - vert(1,1), vert(2,2) - vert(1,2)];
+            ac = [vert(n,1) - vert(1,1), vert(n,2) - vert(1,2)];
+            uab = ab/norm(ab);
+            uac = ac/norm(ac);
+            abc = uab+uac;
+            uabc = abc/norm(abc);
+            newv = vert(1,:) + uabc;
+            if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                uabc = -uabc;
+                newv = vert(1,:) + uabc;
+                if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                    error('Bad bubbling2');
+                end
+            end
+            newvert(1,:) = vert(1,:) + quant*uabc;
+            % v(n)
+            ab = [vert(1,1) - vert(n,1), vert(1,2) - vert(n,2)];
+            ac = [vert(n-1,1) - vert(n,1), vert(n-1,2) - vert(n,2)];
+            uab = ab/norm(ab);
+            uac = ac/norm(ac);
+            abc = uab+uac;
+            uabc = abc/norm(abc);
+            newv = vert(n,:) + uabc;
+            if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                uabc = -uabc;
+                newv = vert(n,:) + uabc;
+                if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                    error('Bad bubbling3');
+                end
+            end
+            newvert(n,:) = vert(n,:) + quant*uabc;
+            %last_vec = vert(1,:) - vert(end,:);
+            %last_point = vert(end,:) + Map.normal(last_vec) * quant;
+            %vert(end+1,:) = vert(1,:); % add final value to end for fudged looping
+            %for v = 1:length(vert)-1
+            %    vec = vert(v+1,:) - vert(v,:);
+            %    point = vert(v,:) + Map.normal(vec) * quant;
+            %    newvert(v,:) = Map.intersection(last_point, last_vec, point, vec);
+            %    last_vec = vec;
+            %    last_point = point;
+            %end
         end
         
         % produces the right hand unit normal to a line.
