@@ -4,7 +4,6 @@ clear;      %clears workspace
 axis equal; %keeps the x and y scale the same
 map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  %default map
 
-
 % botSim = BotSim(map,[0.01,0.005,0]);  %sets up a botSim object a map, and debug mode on.
 botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
 botSim.drawMap();

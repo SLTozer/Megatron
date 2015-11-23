@@ -1,5 +1,4 @@
-addpath(genpath('..\RWTHMindstormNXT'))
-addpath(genpath('..\libusb-win32-bin-1.2.6.0'))
+addpath(genpath('C:\Program Files\RWTHMindstormsNXT'))
 %An example of the ultrasound scanning function
 clf;        %clears figures
 clc;        %clears console
