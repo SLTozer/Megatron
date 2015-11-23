@@ -222,8 +222,7 @@ classdef Robot < handle
             % sanatise data
             %dist(3:5) = NaN;
             dist(dist==256 | dist==0) = NaN;
-        end
-        
+        end         
         function turnUltra(~, deg, clockwise)
             % smoothstart and brake give better precision
             if clockwise
@@ -250,7 +249,6 @@ classdef Robot < handle
             obj.left.SendToNXT();
         end
     end
-    
     methods(Static)
         function [x, y] = plotScan(position, bearing, scan)
             angle = bearing + (2 * pi * [1/length(scan):1/length(scan):1]);

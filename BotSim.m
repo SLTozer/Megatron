@@ -1,5 +1,5 @@
 %{
-Robot simulator V0.35
+Robot simulator V0.36
 If you have any suggestions for fixes or improvements contact Austin Gregg-Smith ag7751@bristol.ac.uk
 %}
 

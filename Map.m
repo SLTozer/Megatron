@@ -60,7 +60,7 @@ classdef Map < handle
             end
         end
         
-                % Creates array of all valid distances between nodes
+        % Creates array of all valid paths between nodes
         % paths are valid if centre is within shape and it doesn't
         % intersect any walls.
         % Walls themselves are valid paths.
@@ -81,11 +81,19 @@ classdef Map < handle
         
         % Find bearing towards target (staying inside map). Empty array if
         % at target or no route found.
-        function [bearing, distance] = findBearing( map, position )
+        function [x, y, bearing, distance] = findBearing( map, position, prevX, prevY )
             if ~inpolygon(position(1), position(2), map.polygonX, map.polygonY)
-                error('Position is outside or too close to walls!');
+                if ~isequal(position, map.vertices(1,:))
+                    x = prevX - position(1);
+                    y = prevY - position(2);
+                    bearing = atan2( y, x);
+                    distance = norm([x, y]);
+                else
+                    bearing = [];
+                    distance = 0;
+                end
             else
-                pdist = map.findValidDistances(position, map.vertices)
+                pdist = map.findValidDistances(position, map.vertices);
                 [~, i] = min( map.dijdist + pdist );
                 if ~isequal(position, map.vertices(1,:))
                     x = map.vertices(i,1) - position(1);
@@ -102,6 +110,11 @@ classdef Map < handle
         function plot( map, position )
             clf
             hold on
+            % plot valid routes
+            paths = map.findValidPaths([map.vertices; position]);
+            for i = 1:size(paths,1)
+                plot( paths(i,[1 3]), paths(i,[2 4]), 'b' );
+            end
             % plot planned route
             pdist = map.findValidDistances(position, map.vertices);
             [~, i] = min( map.dijdist + pdist );
@@ -111,15 +124,9 @@ classdef Map < handle
                 last = map.vertices(i,:);
                 i = map.dijnext(i);
             end
-            % walls, target and position
-            scatter(map.vertices(1,1), map.vertices(1,2), 'x')
+            % target and position
+            scatter(map.vertices(1,1), map.vertices(1,2), 'x', 'r')
             scatter(position(1), position(2), 'o', 'r')
-            plot(map.polygonX, map.polygonY)
-            % plot valid routes
-            paths = map.findValidPaths([map.vertices; position]);
-            for i = 1:size(paths,1)
-                plot( paths(i,[1 3]), paths(i,[2 4]), 'b' );
-            end
         end
     end
     methods(Static)        
@@ -143,13 +150,16 @@ classdef Map < handle
                 t = Map.cross(B(1:2) - A(1:2), B(3:4) - B(1:2)) / denom;
                 u = enum / denom;
                 % fudge for detecting doubles equal to zero or one
-                tol = 0.000001;
-                if xor( abs(t)<tol || abs(t-1)<tol, abs(u)<tol || abs(u-1) < tol)
-                    % intersection if line crosses an endpoint of the other BUT
-                    % doesnt start or stop on that point (crossing a corner)
-                    bool = true;
+                tol = 0.0001;
+                tolU = abs(u)<tol || abs(u-1) < tol;
+                tolT = abs(t)<tol || abs(t-1)<tol;
+                if tolT && ~tolU
+                    bool = 0 <= u && u <= 1;
+                elseif ~tolT && tolU
+                    bool = 0 <= t && t <= 1;
+                elseif tolT && tolU
+                    bool = false;
                 else
-                    % intersection anywhere along rest of line
                     bool = (0 < t && t < 1 && 0 < u && u < 1);
                 end
             end
@@ -211,17 +221,72 @@ classdef Map < handle
         % The map is shrunk such that the new walls are [quant] inwards
         % from the old walls, in the direction normal to the old wall.
         function newvert = shrinkMap( vert, quant )
+            polygonX = cat(1,vert(:,1), vert(1,1));
+            polygonY = cat(1,vert(:,2), vert(1,2));
             newvert = zeros(size(vert));
-            last_vec = vert(1,:) - vert(end,:);
-            last_point = vert(end,:) + Map.normal(last_vec) * quant;
-            vert(end+1,:) = vert(1,:); % add final value to end for fudged looping
-            for v = 1:length(vert)-1
-                vec = vert(v+1,:) - vert(v,:);
-                point = vert(v,:) + Map.normal(vec) * quant;
-                newvert(v,:) = Map.intersection(last_point, last_vec, point, vec);
-                last_vec = vec;
-                last_point = point;
+            n = length(vert);
+            for i = 2:length(vert)-1
+                a = vert(i,:);
+                b = vert(i-1,:);
+                c = vert(i+1,:);
+                ab = [b(1) - a(1), b(2) - a(2)];
+                ac = [c(1) - a(1), c(2) - a(2)];
+                uab = ab/norm(ab);
+                uac = ac/norm(ac);
+                abc = uab+uac;
+                uabc = abc/norm(abc);
+                newv = vert(i,:) + uabc;
+                if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                    uabc = -uabc;
+                    newv = vert(i,:) + uabc;
+                    if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                        error('Bad bubbling1');
+                    end
+                end
+                newvert(i,:) = vert(i,:) + quant*uabc;
             end
+            % v(1)
+            ab = [vert(2,1) - vert(1,1), vert(2,2) - vert(1,2)];
+            ac = [vert(n,1) - vert(1,1), vert(n,2) - vert(1,2)];
+            uab = ab/norm(ab);
+            uac = ac/norm(ac);
+            abc = uab+uac;
+            uabc = abc/norm(abc);
+            newv = vert(1,:) + uabc;
+            if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                uabc = -uabc;
+                newv = vert(1,:) + uabc;
+                if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                    error('Bad bubbling2');
+                end
+            end
+            newvert(1,:) = vert(1,:) + quant*uabc;
+            % v(n)
+            ab = [vert(1,1) - vert(n,1), vert(1,2) - vert(n,2)];
+            ac = [vert(n-1,1) - vert(n,1), vert(n-1,2) - vert(n,2)];
+            uab = ab/norm(ab);
+            uac = ac/norm(ac);
+            abc = uab+uac;
+            uabc = abc/norm(abc);
+            newv = vert(n,:) + uabc;
+            if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                uabc = -uabc;
+                newv = vert(n,:) + uabc;
+                if ~inpolygon(newv(1), newv(2), polygonX, polygonY)
+                    error('Bad bubbling3');
+                end
+            end
+            newvert(n,:) = vert(n,:) + quant*uabc;
+            %last_vec = vert(1,:) - vert(end,:);
+            %last_point = vert(end,:) + Map.normal(last_vec) * quant;
+            %vert(end+1,:) = vert(1,:); % add final value to end for fudged looping
+            %for v = 1:length(vert)-1
+            %    vec = vert(v+1,:) - vert(v,:);
+            %    point = vert(v,:) + Map.normal(vec) * quant;
+            %    newvert(v,:) = Map.intersection(last_point, last_vec, point, vec);
+            %    last_vec = vec;
+            %    last_point = point;
+            %end
         end
         
         % produces the right hand unit normal to a line.

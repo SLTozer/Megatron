@@ -29,10 +29,13 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code for scoring your particles    
     
     
-    %% Write code for resapling your particles
+    %% Write code for resampling your particles
     
     
-    %% Write code to check for convergence    
+    %% Write code to check for convergence   
+	
+
+    %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     
     
     %% Write code to decide how to move next
