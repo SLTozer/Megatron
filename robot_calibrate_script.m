@@ -1,8 +1,9 @@
-%necassery paths
-addpath(genpath('O:\Documents\Robotics\RWTHMindstormsNXTv4.07\RWTHMindstormsNXT'))
-addpath(genpath('\\ads.bris.ac.uk\filestore\MyFiles\StudentUG14\jh12932\Documents\Robotics\BotSimLib0.35\BotSimLib0.35'))
+%necassery paths (CHANGE TO OWN)
+addpath(genpath('\RWTHMindstormsNXT'))
+addpath(genpath('\BotSimLib0.33'))
+addpath(genpath('\libusb-win32-bin-1.2.6.0\lib'))
+loadlibrary('libusb.lib')
 
-% clearup
 close all;
 clear;   
 clc;    
