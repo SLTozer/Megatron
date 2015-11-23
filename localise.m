@@ -14,7 +14,7 @@ directionDivisions = 5;
 mapArea = polyarea(map(:,1),map(:,2));
 
 likelihoodField = LikelihoodField(modifiedMap,1,0.7,0.01);
-routePlan = Map(modifiedMap, target, 0);
+routePlan = Map(modifiedMap, target, -3);
 % Robot parameters
 numScans = 8;
 errorVal = [0, 0.4, 0.2];
@@ -53,19 +53,20 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code for updating your particles scans
     for i = 1:num
-        particles(i).setScanConfig(particles(i).generateScanConfig(numScans));
+        particles(i).setScanConfig(particles(i).generateScanConfig(numScans)); 
         particleScans(i,:) = particles(i).ultraScan();
-    end
-    
+    end % 31% of runtime
+    % 0.37s
     %% Write code for scoring your particles    
-    [weights, avgWeight, bestIndex] = calculateWeightsLF(particles, botScan, likelihoodField);
+    [weights, avgWeight, bestIndex] = calculateWeightsLF(particles, botScan, likelihoodField); % 36% of runtime
     bestParticle = particles(bestIndex);
     weightSlow = weightSlow + (slowDecay * (avgWeight - weightSlow));
     weightFast = weightFast + (fastDecay * (avgWeight - weightFast));
     uncertainty = max([0 (1 - (weightFast/weightSlow))]);
     %% Write code for resampling your particles
-    particles = resample(particles, weights, uncertainty, errorVal);
-    
+    %0.8s
+    particles = resample(particles, weights, uncertainty, errorVal); % 25% of run time
+    % 1.1s
     %% Write code to check for convergence    
     estimatedPos = bestParticle.getBotPos();
     targetDistance = norm([target(1) - estimatedPos(1), target(2) - estimatedPos(2)]);
@@ -88,7 +89,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     [xdiff, ydiff, bearing, distance] = routePlan.findBearing(estimatedPos, tx, ty);
     tx = xdiff + estimatedPos(1);
     ty = ydiff + estimatedPos(2);
-    [tx, ty]
+    [tx, ty];
     direction = bestParticle.getBotAng();
     deltaAng = bearing - direction;
     move = distance;
@@ -117,7 +118,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         converged = 1;
     end
     %end
-    
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
     %if botSim.debug()
@@ -127,9 +127,18 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             particles(i).drawBot(3, 'y'); %draw particle with line length 3 and default color
         end
     botSim.drawBot(30,'g'); %draw robot with line length 30 and green
-    bestParticle.drawBot(3, 'b');
+    bestParticle.drawBot(8, 'r');
     drawnow;
     %end
+    %1.2s
     %pause(0.5);
 end
 end
+
+%% Runtimes (sample of 1.2s per iteration on Map A, 523 particles)
+% Calculating weights takes 36% of run time
+% Ultrascanning takes 31% of run time
+% Resampling takes 25% of run time
+% Route Planning and movement takes 8% of run time
+% The only real place for optimisation is in resampling/calculating weights
+% and number of particles used
