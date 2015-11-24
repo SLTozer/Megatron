@@ -1,8 +1,9 @@
-function [ particles, clusterIDs, clusters ] = clusterResample( prevParticles, prevClusterIDs, weights, uncertainty, errorVal )
+function [ particles, cIDs, clusterCount ] = clusterResample( ...
+    prevParticles, prevCIDs, clusterCount, weights, uncertainty, errorVal )
 % This function is similar to the resample function, except that it
 % assigns clusters to the new particles equal to the cluster of their
 % parents
-% Currently DOES NOT make any use of the uncertainty value - TODO
+% Random particles born of uncertainty will be assigned a new cluster
 
 count = length(weights);
 cumulativeWeights(count,1) = 0;
@@ -18,7 +19,7 @@ i = 1;
 modMap = prevParticles(1).getMap();
 
 particles(count,1) = BotSim;
-clusterIDs = zeros(count);
+cIDs = zeros([count,1]);
 
 for j = 1:count
     while(stochSamp > cumulativeWeights(i))
@@ -27,7 +28,12 @@ for j = 1:count
     particles(j) = BotSim(modMap, errorVal);
     particles(j).setBotPos(prevParticles(i).getBotPos());
     particles(j).setBotAng(prevParticles(i).getBotAng());
-    clusterIDs(j) = prevClusterIDs(i);
+    cIDs(j) = prevCIDs(i);
+    if(uncertainty > rand())
+        clusterCount = clusterCount + 1;
+        particles(j).randomPose(0);
+        cIDs(j) = clusterCount;
+    end
     stochSamp = stochSamp + inverseCount;
 end
 end

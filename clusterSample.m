@@ -1,4 +1,5 @@
-function [ particles, clusters ] = clusterSample( prevParticles, weights, uncertainty, errorVal )
+function [ particles, cIDs, clusterCount ] = clusterSample( ...
+    prevParticles, weights, uncertainty, errorVal )
 % This function is similar to the resample function, except that it
 % additionally generates a set of clusters - 1 for each particle that is
 % resampled.
@@ -17,7 +18,7 @@ i = 1;
 modMap = prevParticles(1).getMap();
 
 particles(count,1) = BotSim;
-clusters = zeros(count);
+cIDs = zeros([count,1]);
 
 clusterCount = 0;
 currentlyClustering = 0;
@@ -35,7 +36,7 @@ for j = 1:count
     particles(j) = BotSim(modMap, errorVal);
     particles(j).setBotPos(prevParticles(i).getBotPos());
     particles(j).setBotAng(prevParticles(i).getBotAng());
-    clusters(j) = clusterCount;
+    cIDs(j) = clusterCount;
     if(uncertainty > rand())
         particles(j).randomPose(0);
     end

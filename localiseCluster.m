@@ -1,4 +1,4 @@
-function [botSim] = localise(botSim,map,target)
+function [botSim] = localiseCluster(botSim,map,target)
 % This function returns botSim, and accepts, botSim, a map and a target.
 % LOCALISE Template localisation function
 
@@ -12,7 +12,7 @@ routePlan = Map(modifiedMap, target, 5);
 % Robot parameters
 numScans = 8;
 errorVal = [0, 0.4, 0.2];
-num = getNumParticles(map, 10, numScans, 0.8);
+num = getNumParticles(map, 6, 6, 0.9);
 
 botSim.setScanConfig(botSim.generateScanConfig(numScans));
 %generate some random particles inside the map
@@ -45,24 +45,49 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     botScan = botSim.ultraScan(); %get a scan from the real robot.
     
-    %% Write code for updating your particles scans
-    for i = 1:num
-        particles(i).setScanConfig(particles(i).generateScanConfig(numScans)); 
-        particleScans(i,:) = particles(i).ultraScan();
-    end % 31% of runtime
-    % 0.37s
-    %% Write code for scoring your particles    
+    %% Apply particle weightings
     [weights, avgWeight, bestIndex] = calculateWeightsLF(particles, botScan, likelihoodField); % 36% of runtime
-    bestParticle = particles(bestIndex);
+    % bestParticle = particles(bestIndex);
     weightSlow = weightSlow + (slowDecay * (avgWeight - weightSlow));
     weightFast = weightFast + (fastDecay * (avgWeight - weightFast));
     uncertainty = max([0 (1 - (weightFast/weightSlow))]);
-    %% Write code for resampling your particles
+    %% Resample and cluster particles
     %0.8s
-    particles = resample(particles, weights, uncertainty, errorVal); % 25% of run time
+    if n == 1
+        [particles, clusterIDs, clusterCount] = ...
+            clusterSample(particles, weights, 0, errorVal);
+    else
+        weights = normalizeClusterWeights(weights, clusterIDs, cCounts);
+        [particles, clusterIDs, clusterCount] = ...
+            clusterResample(particles, clusterIDs, clusterCount, weights, 0, errorVal);
+    end
+    % Set correct cluster data
+    [clusterIDs, clusterCount] = removeEmptyClusters(clusterIDs);
+    [cCounts, cWeights, cMeans, cBearings] = ...
+        getClusterData( particles, weights, clusterIDs, clusterCount );
+    % Merge clusters
+    oldClusterCount = -1;
+    while oldClusterCount ~= clusterCount
+        oldClusterCount = length(cCounts);
+        [clusterIDs, cCounts, cWeights, cMeans, cBearings] = ...
+            mergeClusters(10, pi/4, clusterIDs, cCounts, cWeights, cMeans, cBearings);
+        clusterCount = length(cCounts);
+    end
     % 1.1s
-    %% Write code to check for convergence    
-    estimatedPos = bestParticle.getBotPos();
+    %% Write code to check for convergence
+    estimatedDist = 0;
+        n
+    for i = 1:length(cMeans(:,1))
+        i
+        [cMeans(i,:), target]
+        [norm(cMeans(i,:)-target), estimatedDist]
+        if norm(cMeans(i,:)-target) > estimatedDist
+            estimatedPos = cMeans(i,:);
+            estimatedAng = cBearings(i,:);
+            estimatedDist = norm(cMeans(i,:)-target);
+        end
+    end
+    % estimatedPos = bestParticle.getBotPos();
     if (n == 1)
         tx = estimatedPos(1);
         ty = estimatedPos(2);
@@ -72,12 +97,10 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     tx = xdiff + estimatedPos(1);
     ty = ydiff + estimatedPos(2);
     [tx, ty]
-    direction = bestParticle.getBotAng();
-    deltaAng = bearing - direction;
+    deltaAng = bearing - estimatedAng;
+    move = distance;
     if (distance > 10)
-        move = distance / 2;
-    else
-        move = distance;
+        move = 10;
     end
     botSim.turn(deltaAng);
     botSim.move(move);
@@ -95,7 +118,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         end
         inside = botSim.insideMap();
     end
-    estimatedPos = bestParticle.getBotPos();
+    % estimatedPos = bestParticle.getBotPos();
     targetDistance = norm([target(1) - estimatedPos(1), target(2) - estimatedPos(2)]);
     if (targetDistance < 3)
         converged = 1;
@@ -110,7 +133,10 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             particles(i).drawBot(3, 'y'); %draw particle with line length 3 and default color
         end
     botSim.drawBot(30,'g'); %draw robot with line length 30 and green
-    bestParticle.drawBot(8, 'r');
+    % bestParticle.drawBot(8, 'r');
+    plot(estimatedPos(1),estimatedPos(2),'o');
+    plot([estimatedPos(1) estimatedPos(1)+cos(estimatedAng)*15],...
+        [estimatedPos(2) estimatedPos(2)+sin(estimatedAng)*15],'r');
     drawnow;
     %end
     %1.2s
