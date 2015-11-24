@@ -64,13 +64,13 @@ else
                 clf;        %clears figures
                 botSim = BotSim(maps{i},noiseLevel(:,j),adminKey);  %sets up botSim object with adminKey
                 
-                %if k ==1 %runs from preset start and target positions first time, after that choose random positions
-                %    botSim.setBotPos(startPositions(i,:),adminKey)
-                %    target = targetPositions(i,:);
-                %else
+                if k ==1 %runs from preset start and target positions first time, after that choose random positions
+                    botSim.setBotPos(startPositions(i,:),adminKey)
+                    target = targetPositions(i,:);
+                else
                     botSim.randomPose(10); %puts the robot in a random position at least 10cm away from a wall
                     target = botSim.getRndPtInMap(10)  %gets random target
-                %end
+                end
                 botSim.drawMap();
                 botSim.drawBot(3);
                 plot(target(1),target(2),'*');
@@ -80,7 +80,7 @@ else
                 tic %starts timer
                 %calls your (hopefully finished) localisation function
                 
-                returnedBot = localiseCluster(botSim,maps{i},target);
+                returnedBot = localise(botSim,maps{i},target);
                 
                 %results calculation
                 resultsTime(i,j,k) = toc; %stops timer
@@ -112,7 +112,10 @@ else
     end
     
     %% Calculate average scores
-    
+    %meanCompletionTime = mean(resultsTime(3,:))
+    %sdCompletionTime = std(resultsTime(3,:))
+    %meanDisFromTgt = mean(resultsDis(3,:))
+    %stdDisFromTgt = std(resultsDis(3,:))
     averageCompletionTime = sum(sum(resultsTime,3)/numberOfrepeats,2)/size(noiseLevel,2);
     averageDisFromTgt = sum(sum(resultsDis,3)/numberOfrepeats,2)/size(noiseLevel,2);
     averagePathLength = sum(sum(resultsLength,3)/numberOfrepeats,2)/size(noiseLevel,2);

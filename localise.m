@@ -1,4 +1,4 @@
-function [botSim] = localiseCluster(botSim,map,target)
+function [botSim] = localise(botSim,map,target)
 % This function returns botSim, and accepts, botSim, a map and a target.
 % LOCALISE Template localisation function
 
@@ -24,7 +24,7 @@ for i = 1:num
 end
 
 %% Localisation code
-maxNumOfIterations = 50;
+maxNumOfIterations = 60;
 n = 0;
 converged =0; %The filter has not converged yet
 
@@ -132,6 +132,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         end
         inside = botSim.insideMap();
         display('Reversing');
+        limitsInARow = 0;
     end
     % estimatedPos = bestParticle.getBotPos();
     targetDistance = norm([target(1) - estimatedPos(1), target(2) - estimatedPos(2)]);
