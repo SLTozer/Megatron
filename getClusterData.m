@@ -32,8 +32,8 @@ for i = 1:clusterCount
     end
     cMean(i,:) = cMean(i,:) / cCount(i);
     cWeight(i) = cWeight(i) / cCount(i);
-    vecSum
-    cBearing(i) = vectorAngle(vecSum(c,:))
+    vecSum;
+    cBearing(i) = vectorAngle(vecSum(i,:));
 end
 
 end

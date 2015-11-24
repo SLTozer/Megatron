@@ -31,14 +31,14 @@ maps{3} = [-30,0;-30,40;30,40;30,60;5,60;45,90;85,60;60,60;60,40;120,40;120,60;9
 
 %Different noise levels to be tested
 noiseLevel(:,1) = [0,0,0]; %no noise
-% noiseLevel(:,2) = [1,0.001,0.0005]; %all the noise
+%noiseLevel(:,2) = [1,0.001,0.0005]; %all the noise
 
 %The number of time the function is run so that the average performance can
 %be calculated. This will be much larger during real marking.
 %if the value is 1 it will run from predefined start and target positions
 %If the number is greater than 1, the first test will be from predefined
 %positions, and the rest will be randomised.
-numberOfrepeats = 1;
+numberOfrepeats = 10;
 
 %Predefined start and target positions
 startPositions =  [20,20;30,20;50,70 ]; %These will change
@@ -64,13 +64,13 @@ else
                 clf;        %clears figures
                 botSim = BotSim(maps{i},noiseLevel(:,j),adminKey);  %sets up botSim object with adminKey
                 
-                if k ==1 %runs from preset start and target positions first time, after that choose random positions
-                    botSim.setBotPos(startPositions(i,:),adminKey)
-                    target = targetPositions(i,:);
-                else
+                %if k ==1 %runs from preset start and target positions first time, after that choose random positions
+                %    botSim.setBotPos(startPositions(i,:),adminKey)
+                %    target = targetPositions(i,:);
+                %else
                     botSim.randomPose(10); %puts the robot in a random position at least 10cm away from a wall
                     target = botSim.getRndPtInMap(10)  %gets random target
-                end
+                %end
                 botSim.drawMap();
                 botSim.drawBot(3);
                 plot(target(1),target(2),'*');
@@ -80,7 +80,7 @@ else
                 tic %starts timer
                 %calls your (hopefully finished) localisation function
                 
-                returnedBot = localise(botSim,maps{i},target);
+                returnedBot = localiseCluster(botSim,maps{i},target);
                 
                 %results calculation
                 resultsTime(i,j,k) = toc; %stops timer

@@ -1,4 +1,4 @@
-function [botSim] = localise(botSim,map,target)
+function [botSim] = localiseOld(botSim,map,target)
 % This function returns botSim, and accepts, botSim, a map and a target.
 % LOCALISE Template localisation function
 
@@ -62,7 +62,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     particles = resample(particles, weights, uncertainty, errorVal); % 25% of run time
     % 1.1s
     %% Write code to check for convergence    
-    estimatedPos = bestParticle.getBotPos();
+    estimatedPos = bestParticle.getBotPos()
     if (n == 1)
         tx = estimatedPos(1);
         ty = estimatedPos(2);
@@ -71,10 +71,12 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     [xdiff, ydiff, bearing, distance] = routePlan.findBearing(estimatedPos, tx, ty);
     tx = xdiff + estimatedPos(1);
     ty = ydiff + estimatedPos(2);
-    [tx, ty]
+    [tx, ty];
     direction = bestParticle.getBotAng();
     deltaAng = bearing - direction;
-    if (distance > 10)
+    if (n < 5 && distance > 4)
+        move = 4;
+    elseif (distance > 10)
         move = distance / 2;
     else
         move = distance;

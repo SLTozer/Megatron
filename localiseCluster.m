@@ -41,6 +41,7 @@ for i = 1:num
 end
 tx = 0;
 ty = 0;
+limitsInARow = 0;
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     botScan = botSim.ultraScan(); %get a scan from the real robot.
@@ -76,18 +77,18 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     % 1.1s
     %% Write code to check for convergence
     estimatedDist = 0;
-        n
     for i = 1:length(cMeans(:,1))
-        i
-        [cMeans(i,:), target]
-        [norm(cMeans(i,:)-target), estimatedDist]
+        i;
+        [cMeans(i,:), target];
+        [norm(cMeans(i,:)-target), estimatedDist];
         if norm(cMeans(i,:)-target) > estimatedDist
             estimatedPos = cMeans(i,:);
             estimatedAng = cBearings(i,:);
             estimatedDist = norm(cMeans(i,:)-target);
         end
     end
-    % estimatedPos = bestParticle.getBotPos();
+    estimatedPos
+
     if (n == 1)
         tx = estimatedPos(1);
         ty = estimatedPos(2);
@@ -96,13 +97,26 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     [xdiff, ydiff, bearing, distance] = routePlan.findBearing(estimatedPos, tx, ty);
     tx = xdiff + estimatedPos(1);
     ty = ydiff + estimatedPos(2);
-    [tx, ty]
     deltaAng = bearing - estimatedAng;
     move = distance;
-    if (distance > 10)
-        move = 10;
+    if (n < 5 && distance > 4)
+        move = 4;
+    elseif (distance > 10)
+        move = distance / 2;
+    elseif (distance < 2)
+        move = 2;
     end
     botSim.turn(deltaAng);
+    [distances crossingPoints] = botSim.ultraScan();
+    % Limit the bots movement forward if it would take it through a wall
+    if (distances(1) - 5 < move)
+        display('Limiting movement');
+        move = distances(1) - 10;
+        limitsInARow = limitsInARow + 1;
+        move = move - limitsInARow;
+    else
+        limitsInARow = 0;
+    end
     botSim.move(move);
     for i = 1:num
         particles(i).turn(deltaAng);
@@ -117,6 +131,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             particles(i).move(-move);
         end
         inside = botSim.insideMap();
+        display('Reversing');
     end
     % estimatedPos = bestParticle.getBotPos();
     targetDistance = norm([target(1) - estimatedPos(1), target(2) - estimatedPos(2)]);
@@ -127,17 +142,17 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
     %if botSim.debug()
-        hold off; %the drawMap() function will clear the drawing when hold is off
-    botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
-        for i =1:num
-            particles(i).drawBot(3, 'y'); %draw particle with line length 3 and default color
-        end
-    botSim.drawBot(30,'g'); %draw robot with line length 30 and green
+    %    hold off; %the drawMap() function will clear the drawing when hold is off
+    %botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
+    %    for i =1:num
+    %        particles(i).drawBot(3, 'y'); %draw particle with line length 3 and default color
+    %    end
+    %botSim.drawBot(30,'g'); %draw robot with line length 30 and green
     % bestParticle.drawBot(8, 'r');
-    plot(estimatedPos(1),estimatedPos(2),'o');
-    plot([estimatedPos(1) estimatedPos(1)+cos(estimatedAng)*15],...
-        [estimatedPos(2) estimatedPos(2)+sin(estimatedAng)*15],'r');
-    drawnow;
+    %plot(estimatedPos(1),estimatedPos(2),'o');
+    %plot([estimatedPos(1) estimatedPos(1)+cos(estimatedAng)*15],...
+    %    [estimatedPos(2) estimatedPos(2)+sin(estimatedAng)*15],'r');
+    %drawnow;
     %end
     %1.2s
     %pause(0.5);
