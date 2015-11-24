@@ -8,19 +8,11 @@ function testRealbot(robot,map,target)
     %botSim.setMap(modifiedMap);
 
     likelihoodField = LikelihoodField(modifiedMap,1,0.8,0.005);
-<<<<<<< HEAD
     routePlan = Map(modifiedMap, target, 10); % NB due to standard map being defined counterclockwise, shrinking in opposite direction
     % Robot parameters
     numScans = robot.scan_num;
     errorVal = [1, 0.1, 0.1]; % scan std dev, movement cm std dev per cm, radians std dev per rad
     num = 1000; % number of particles
-=======
-    routePlan = Map(modifiedMap, target, -10); % NB due to standard map being defined counterclockwise, shrinking in opposite direction
-    % Robot parameters
-    numScans = 8;
-    errorVal = [0, 0.2, 0.1];
-    num =1000; % number of particles
->>>>>>> cc3174b35453dd5678f3372234cb51975eca9317
 
     robot.scan_num = numScans;
     %botSim.setScanConfig(botSim.generateScanConfig(numScans));
@@ -51,17 +43,9 @@ function testRealbot(robot,map,target)
     tx = 0;
     ty = 0;
     
-<<<<<<< HEAD
     while(converged == 0 && n < maxNumOfIterations) %%particle filter loop        
         n = n+1; %increment the current number of iterations
         botScan = robot.ultraScan() %get a scan from the real robot.
-=======
-    figure() %NB only for debug
-    hold on
-    while(converged == 0 && n < maxNumOfIterations) %%particle filter loop        
-        n = n+1; %increment the current number of iterations
-        botScan = robot.ultraScan(); %get a scan from the real robot.
->>>>>>> cc3174b35453dd5678f3372234cb51975eca9317
 
         %% Write code for updating your particles scans
         for i = 1:num
@@ -77,25 +61,17 @@ function testRealbot(robot,map,target)
         uncertainty = max([0 (1 - (weightFast/weightSlow))]);
         
         %% Write code to check for convergence   
-<<<<<<< HEAD
         bestParticle = particles(bestIndex);
         estimatedPos = bestParticle.getBotPos();
-=======
-        estimatedPos = particles(bestIndex).getBotPos();
->>>>>>> cc3174b35453dd5678f3372234cb51975eca9317
         targetDistance = norm([target(1) - estimatedPos(1), target(2) - estimatedPos(2)]);
         if (targetDistance < 3)
             converged = 1;
             estimatedPos
         end
-<<<<<<< HEAD
         if (n == 1)
             tx = estimatedPos(1);
             ty = estimatedPos(2);
         end
-        estimatedPos
-=======
->>>>>>> cc3174b35453dd5678f3372234cb51975eca9317
         %% Write code for resampling your particles
         particles = resample(particles, weights, uncertainty, errorVal);
 
@@ -115,57 +91,33 @@ function testRealbot(robot,map,target)
         [xdiff, ydiff, bearing, distance] = routePlan.findBearing(estimatedPos, tx, ty);
         tx = xdiff + estimatedPos(1);
         ty = ydiff + estimatedPos(2);
-<<<<<<< HEAD
-        direction = bestParticle.getBotAng()
-        bearing
+        direction = bestParticle.getBotAng();
         deltaAng = wrapToPi(bearing - direction)
         if (n < 5 && distance > 4)
             move = 4;
         elseif (distance > 10)
             move = distance / 2;
         else
-            move = distance
-        end
-                
-=======
-        direction = particles(bestIndex).getBotAng();
-        deltaAng = wrapToPi(bearing - direction);
-        if (distance > 10)
-            move = distance / 2;
-        else
             move = distance;
         end
->>>>>>> cc3174b35453dd5678f3372234cb51975eca9317
         robot.turn(deltaAng);
         robot.move(move);
         for i = 1:num
             particles(i).turn(deltaAng);
             particles(i).move(move);
         end
-<<<<<<< HEAD
         bestParticle.turn(deltaAng);
         bestParticle.move(move);
-=======
->>>>>>> cc3174b35453dd5678f3372234cb51975eca9317
        
 
         %% Drawing
         %only draw if you are in debug mode or it will be slow during marking
         %if botSim.debug()
-<<<<<<< HEAD
         figure
         hold on
-        particles(bestIndex).drawMap();
+        bestParticle.drawMap();
         routePlan.plot(estimatedPos);
         %Robot.plotScan(estimatedPos, direction, botScan);
-        %botSim.drawBot(30,'g'); %draw robot with line length 30 and green
-=======
-        clf
-        routePlan.plot(estimatedPos)
-        particles(bestIndex).drawMap();
-        %botSim.drawBot(30,'g'); %draw robot with line length 30 and green
-        particles(bestIndex).drawBot(3, 'b');
->>>>>>> cc3174b35453dd5678f3372234cb51975eca9317
         for i =1:num
             particles(i).drawBot(3,'b'); %draw particle with line length 3 and default color
         end
